@@ -60,6 +60,11 @@ export default {
           cameraPermission: "Allow TransFleet Rider to access your camera to scan QR codes and take package photos."
         }
       ]
-    ]
+    ],
+    extra: {
+      eas: {
+        projectId: "5479fc43-e6db-4246-a630-5f820f414650"
+      }
+    }
   }
 };

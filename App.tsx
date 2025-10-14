@@ -799,7 +799,7 @@ export default function App() {
           <DashboardHomeScreen
             riderName={appState.riderName}
             onViewAllJobs={handleViewAllJobs}
-            onKMReport={() => console.log('KM Report')}
+            onKMReport={handleViewPerformance}
             onProfile={handleViewProfile}
             onEmergency={() => console.log('Emergency')}
             onSupport={() => console.log('Support')}

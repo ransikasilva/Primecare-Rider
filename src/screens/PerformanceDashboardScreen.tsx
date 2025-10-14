@@ -13,6 +13,7 @@ import {
   Share,
   Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { ArrowLeft, Share2, Calendar, Package, CheckCircle, Download, FileText } from 'lucide-react-native';
 import { COLORS, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { apiService } from '../services/api';
@@ -66,6 +67,25 @@ const PerformanceDashboardScreen: React.FC<PerformanceDashboardScreenProps> = Re
   });
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+
+  // Date picker states
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+
+  // Date picker handlers
+  const onStartDateChange = (event: any, selectedDate?: Date) => {
+    setShowStartPicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setStartDate(selectedDate.toISOString().split('T')[0]);
+    }
+  };
+
+  const onEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndPicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setEndDate(selectedDate.toISOString().split('T')[0]);
+    }
+  };
 
   // Load performance data for date range
   const loadPerformanceData = useCallback(async () => {
@@ -236,18 +256,47 @@ const PerformanceDashboardScreen: React.FC<PerformanceDashboardScreenProps> = Re
           <View style={styles.dateInputsRow}>
             <View style={styles.dateInputContainer}>
               <Text style={styles.dateLabel}>From</Text>
-              <View style={styles.dateInput}>
+              <TouchableOpacity
+                style={styles.dateInput}
+                onPress={() => setShowStartPicker(true)}
+              >
                 <Text style={styles.dateText}>{formatDate(startDate)}</Text>
-              </View>
+                <Calendar size={16} color={COLORS.textSecondary} />
+              </TouchableOpacity>
             </View>
 
             <View style={styles.dateInputContainer}>
               <Text style={styles.dateLabel}>To</Text>
-              <View style={styles.dateInput}>
+              <TouchableOpacity
+                style={styles.dateInput}
+                onPress={() => setShowEndPicker(true)}
+              >
                 <Text style={styles.dateText}>{formatDate(endDate)}</Text>
-              </View>
+                <Calendar size={16} color={COLORS.textSecondary} />
+              </TouchableOpacity>
             </View>
           </View>
+
+          {showStartPicker && (
+            <DateTimePicker
+              value={new Date(startDate)}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={onStartDateChange}
+              maximumDate={new Date()}
+            />
+          )}
+
+          {showEndPicker && (
+            <DateTimePicker
+              value={new Date(endDate)}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={onEndDateChange}
+              minimumDate={new Date(startDate)}
+              maximumDate={new Date()}
+            />
+          )}
 
           <View style={styles.dateRangeInfo}>
             <Text style={styles.dateRangeInfoText}>
@@ -354,7 +403,7 @@ const styles = StyleSheet.create({
   dateInputsRow: { flexDirection: 'row', gap: SPACING.md, marginBottom: SPACING.sm },
   dateInputContainer: { flex: 1 },
   dateLabel: { fontSize: 12, fontWeight: '500', color: COLORS.textSecondary, marginBottom: SPACING.xs },
-  dateInput: { borderWidth: 1, borderColor: COLORS.gray300, borderRadius: LAYOUT.radius.md, padding: SPACING.md, backgroundColor: COLORS.gray50 },
+  dateInput: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: COLORS.gray300, borderRadius: LAYOUT.radius.md, padding: SPACING.md, backgroundColor: COLORS.white },
   dateText: { fontSize: 14, color: COLORS.textPrimary, fontWeight: '500' },
   dateRangeInfo: { paddingTop: SPACING.sm, borderTopWidth: 1, borderTopColor: COLORS.gray200, marginTop: SPACING.sm },
   dateRangeInfoText: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' },
