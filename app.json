@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "PrimeCare Rider",
+    "slug": "primecare-rider-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "platforms": ["ios", "android"],
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.primecare.rider",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "PrimeCare needs location access to track deliveries and provide accurate navigation to pickup and delivery locations.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "PrimeCare needs location access to track deliveries and provide accurate navigation to pickup and delivery locations.",
+        "NSLocationAlwaysUsageDescription": "PrimeCare needs background location access to track your delivery progress and update hospitals on sample delivery status in real-time."
+      },
+      "googleServicesFile": "./ios/GoogleService-Info.plist"
+    },
+    "android": {
+      "package": "com.primecare.rider",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "POST_NOTIFICATIONS"
+      ],
+      "googleServicesFile": "./android/app/google-services.json"
+    },
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#4ECDC4",
+      "androidMode": "default",
+      "androidCollapsedTitle": "#{unread_notifications} new notifications"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#4ECDC4",
+          "sounds": ["./assets/notification-sound.wav"]
+        }
+      ]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

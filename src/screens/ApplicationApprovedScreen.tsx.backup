@@ -1,0 +1,737 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
+  Share,
+  Linking,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
+import { apiService } from '../services/api';
+
+interface ApplicationApprovedScreenProps {
+  onCompleteSetup: () => void;
+}
+
+interface RiderProfileData {
+  riderId: string;
+  riderName: string;
+  hospitalName: string;
+  approvalDate: string;
+  status: string;
+}
+
+const ApplicationApprovedScreen: React.FC<ApplicationApprovedScreenProps> = ({
+  onCompleteSetup,
+}) => {
+  const [completedSetupTasks, setCompletedSetupTasks] = useState({
+    hospitalVisit: false,
+    appSetup: false,
+    firstDelivery: false,
+  });
+  const [riderData, setRiderData] = useState<RiderProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRiderProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await apiService.getRiderProfile();
+
+        if (response.success && response.data) {
+          const profile = response.data;
+          setRiderData({
+            riderId: profile.id || 'N/A',
+            riderName: profile.rider_name || profile.name || 'N/A',
+            hospitalName: profile.hospital_name || 'Hospital Partner',
+            approvalDate: profile.approved_at || profile.created_at || new Date().toISOString(),
+            status: profile.status || 'approved'
+          });
+        } else {
+          setError(response.message || 'Failed to load rider profile');
+        }
+      } catch (error: any) {
+        setError(error.message || 'Failed to load rider profile');
+        Alert.alert('Error', 'Failed to load your profile. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRiderProfile();
+  }, []);
+
+  const retryFetch = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await apiService.getRiderProfile();
+
+      if (response.success && response.data) {
+        const profile = response.data;
+        setRiderData({
+          riderId: profile.id || 'N/A',
+          riderName: profile.rider_name || profile.name || 'N/A',
+          hospitalName: profile.hospital_name || 'Hospital Partner',
+          approvalDate: profile.approved_at || profile.created_at || new Date().toISOString(),
+          status: profile.status || 'approved'
+        });
+      } else {
+        setError(response.message || 'Failed to load rider profile');
+      }
+    } catch (error: any) {
+      setError(error.message || 'Failed to load rider profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSetupTask = (task: keyof typeof completedSetupTasks) => {
+    setCompletedSetupTasks(prev => ({
+      ...prev,
+      [task]: !prev[task],
+    }));
+  };
+
+  const handleShare = async () => {
+    if (!riderData) return;
+
+    try {
+      await Share.share({
+        message: `🎉 I'm now a verified PrimeCare Rider! Rider ID: ${riderData.riderId}. Ready to deliver medical samples safely across Sri Lanka.`,
+        title: 'Joined PrimeCare Rider Team',
+      });
+    } catch (error) {
+      console.log('Error sharing:', error);
+    }
+  };
+
+  const handleContactSupport = (type: 'call' | 'whatsapp' | 'email') => {
+    let url = '';
+    switch (type) {
+      case 'call':
+        url = 'tel:+94112345678';
+        break;
+      case 'whatsapp':
+        url = 'whatsapp://send?phone=94112345678&text=Hi, I just got approved as a PrimeCare Rider!';
+        break;
+      case 'email':
+        url = 'mailto:support@primecare.lk?subject=New Rider Setup&body=Hi, I just got approved as a PrimeCare Rider and need help with setup.';
+        break;
+    }
+    
+    Linking.openURL(url).catch(() => {
+      console.log('Failed to open URL');
+    });
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Loading your profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !riderData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Failed to load profile</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={retryFetch}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {/* Success Icon */}
+        <View style={styles.iconContainer}>
+          <View style={styles.successIcon}>
+            <Text style={styles.trophyIcon}>🏆</Text>
+          </View>
+        </View>
+
+        {/* Main Content */}
+        <View style={styles.mainContent}>
+          <Text style={styles.title}>Welcome to the PrimeCare family!</Text>
+          <Text style={styles.subtitle}>
+            Congratulations! Your rider application has been approved and you're now ready to start making a difference in healthcare delivery.
+          </Text>
+
+          {/* Account Details */}
+          <View style={styles.accountContainer}>
+            <Text style={styles.accountTitle}>Your Account Details</Text>
+            
+            <View style={styles.accountDetail}>
+              <Text style={styles.accountLabel}>Status</Text>
+              <View style={styles.statusBadge}>
+                <View style={styles.statusDot} />
+                <Text style={styles.statusText}>Active</Text>
+              </View>
+            </View>
+
+            <View style={styles.accountDetail}>
+              <Text style={styles.accountLabel}>Hospital Partner</Text>
+              <Text style={styles.accountValue}>{riderData.hospitalName}</Text>
+            </View>
+
+            <View style={styles.accountDetail}>
+              <Text style={styles.accountLabel}>Approval Date</Text>
+              <Text style={styles.accountValue}>{formatDate(riderData.approvalDate)}</Text>
+            </View>
+
+            <View style={styles.accountDetail}>
+              <Text style={styles.accountLabel}>Rider ID</Text>
+              <Text style={styles.accountValue}>{riderData.riderId}</Text>
+            </View>
+          </View>
+
+          {/* Getting Started Checklist */}
+          <View style={styles.checklistContainer}>
+            <Text style={styles.checklistTitle}>Getting Started Checklist</Text>
+            <Text style={styles.checklistSubtitle}>
+              Complete these steps to start receiving delivery assignments
+            </Text>
+
+            <View style={styles.checklistSections}>
+              {/* Hospital Admin Office */}
+              <View style={styles.checklistSection}>
+                <TouchableOpacity 
+                  style={styles.checklistHeader}
+                  onPress={() => toggleSetupTask('hospitalVisit')}
+                >
+                  <View style={styles.checkboxContainer}>
+                    <View style={[
+                      styles.checkbox,
+                      completedSetupTasks.hospitalVisit && styles.checkboxChecked
+                    ]}>
+                      {completedSetupTasks.hospitalVisit && (
+                        <Text style={styles.checkboxIcon}>✓</Text>
+                      )}
+                    </View>
+                    <Text style={styles.checklistSectionTitle}>
+                      Visit Hospital Admin Office
+                    </Text>
+                  </View>
+                  <Text style={styles.expandIcon}>
+                    {completedSetupTasks.hospitalVisit ? '▼' : '▶'}
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={styles.checklistTasks}>
+                  <View style={styles.checklistTask}>
+                    <Text style={styles.taskIcon}>📋</Text>
+                    <Text style={styles.taskText}>Complete employment paperwork</Text>
+                  </View>
+                  <View style={styles.checklistTask}>
+                    <Text style={styles.taskIcon}>📷</Text>
+                    <Text style={styles.taskText}>Take official ID photo</Text>
+                  </View>
+                  <View style={styles.checklistTask}>
+                    <Text style={styles.taskIcon}>🎓</Text>
+                    <Text style={styles.taskText}>Attend safety orientation</Text>
+                  </View>
+                  <View style={styles.checklistTask}>
+                    <Text style={styles.taskIcon}>🎁</Text>
+                    <Text style={styles.taskText}>Collect rider equipment kit</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* App Setup */}
+              <View style={styles.checklistSection}>
+                <TouchableOpacity 
+                  style={styles.checklistHeader}
+                  onPress={() => toggleSetupTask('appSetup')}
+                >
+                  <View style={styles.checkboxContainer}>
+                    <View style={[
+                      styles.checkbox,
+                      completedSetupTasks.appSetup && styles.checkboxChecked
+                    ]}>
+                      {completedSetupTasks.appSetup && (
+                        <Text style={styles.checkboxIcon}>✓</Text>
+                      )}
+                    </View>
+                    <Text style={styles.checklistSectionTitle}>
+                      Complete App Setup
+                    </Text>
+                  </View>
+                  <Text style={styles.expandIcon}>
+                    {completedSetupTasks.appSetup ? '▼' : '▶'}
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={styles.checklistTasks}>
+                  <View style={styles.checklistTask}>
+                    <Text style={styles.taskIcon}>📱</Text>
+                    <Text style={styles.taskText}>Enable location services</Text>
+                  </View>
+                  <View style={styles.checklistTask}>
+                    <Text style={styles.taskIcon}>🔔</Text>
+                    <Text style={styles.taskText}>Allow push notifications</Text>
+                  </View>
+                  <View style={styles.checklistTask}>
+                    <Text style={styles.taskIcon}>📸</Text>
+                    <Text style={styles.taskText}>Test QR code scanner</Text>
+                  </View>
+                  <View style={styles.checklistTask}>
+                    <Text style={styles.taskIcon}>🛣️</Text>
+                    <Text style={styles.taskText}>Test navigation system</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Support Contacts */}
+          <View style={styles.supportContainer}>
+            <Text style={styles.supportTitle}>Need Help Getting Started?</Text>
+            <Text style={styles.supportDescription}>
+              Our team is here to help you succeed as a PrimeCare Rider
+            </Text>
+            
+            <View style={styles.supportOptions}>
+              <TouchableOpacity 
+                style={styles.supportOption}
+                onPress={() => handleContactSupport('call')}
+              >
+                <Text style={styles.supportIcon}>📞</Text>
+                <View style={styles.supportOptionContent}>
+                  <Text style={styles.supportOptionTitle}>Call Support</Text>
+                  <Text style={styles.supportOptionText}>+94 11 234 5678</Text>
+                  <Text style={styles.supportOptionHours}>24/7 Support</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.supportOption}
+                onPress={() => handleContactSupport('whatsapp')}
+              >
+                <Text style={styles.supportIcon}>💬</Text>
+                <View style={styles.supportOptionContent}>
+                  <Text style={styles.supportOptionTitle}>WhatsApp</Text>
+                  <Text style={styles.supportOptionText}>+94 77 234 5678</Text>
+                  <Text style={styles.supportOptionHours}>Quick responses</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.supportOption}
+                onPress={() => handleContactSupport('email')}
+              >
+                <Text style={styles.supportIcon}>✉️</Text>
+                <View style={styles.supportOptionContent}>
+                  <Text style={styles.supportOptionTitle}>Email Support</Text>
+                  <Text style={styles.supportOptionText}>support@primecare.lk</Text>
+                  <Text style={styles.supportOptionHours}>Detailed help</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Testimonials */}
+          <View style={styles.testimonialsContainer}>
+            <Text style={styles.testimonialsTitle}>What Other Riders Say</Text>
+            
+            <View style={styles.testimonial}>
+              <Text style={styles.testimonialText}>
+                "PrimeCare has been amazing! Great support team and steady income. Proud to help healthcare in Sri Lanka."
+              </Text>
+              <Text style={styles.testimonialAuthor}>- Kamal P., Colombo Rider</Text>
+              <View style={styles.testimonialRating}>
+                <Text style={styles.star}>★★★★★</Text>
+              </View>
+            </View>
+
+            <View style={styles.testimonial}>
+              <Text style={styles.testimonialText}>
+                "The app is easy to use and the hospital staff are very helpful. I love being part of the medical team."
+              </Text>
+              <Text style={styles.testimonialAuthor}>- Priya S., Kandy Rider</Text>
+              <View style={styles.testimonialRating}>
+                <Text style={styles.star}>★★★★★</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Bottom Actions */}
+      <View style={styles.bottomSection}>
+        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+          <Text style={styles.shareButtonText}>Share Good News</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.completeButton} onPress={onCompleteSetup}>
+          <Text style={styles.completeButtonText}>Complete Setup</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  loadingText: {
+    marginTop: SPACING.md,
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  errorText: {
+    fontSize: 16,
+    color: COLORS.error || COLORS.textPrimary,
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderRadius: LAYOUT.radius.lg,
+  },
+  retryButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: SPACING.lg * 1.5,
+    paddingTop: 40,
+    paddingBottom: 20,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  successIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: COLORS.primary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  trophyIcon: {
+    fontSize: 50,
+  },
+  mainContent: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  accountContainer: {
+    backgroundColor: COLORS.background,
+    borderRadius: LAYOUT.radius.xl,
+    padding: 20,
+    marginBottom: 32,
+  },
+  accountTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+  },
+  accountDetail: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray200,
+  },
+  accountLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  accountValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.textPrimary,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.success + '20',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.success,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.success,
+  },
+  checklistContainer: {
+    marginBottom: 32,
+  },
+  checklistTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  checklistSubtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  checklistSections: {
+    gap: 16,
+  },
+  checklistSection: {
+    backgroundColor: COLORS.background,
+    borderRadius: LAYOUT.radius.lg,
+    padding: 16,
+  },
+  checklistHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: COLORS.gray200,
+    borderRadius: 4,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  checkboxIcon: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  checklistSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  expandIcon: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+  },
+  checklistTasks: {
+    gap: 8,
+  },
+  checklistTask: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  taskIcon: {
+    fontSize: 16,
+    marginRight: 12,
+    width: 20,
+  },
+  taskText: {
+    flex: 1,
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
+  },
+  supportContainer: {
+    backgroundColor: COLORS.primary + '10',
+    borderRadius: LAYOUT.radius.xl,
+    padding: 20,
+    marginBottom: 32,
+  },
+  supportTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: 8,
+  },
+  supportDescription: {
+    fontSize: 14,
+    color: COLORS.primary,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  supportOptions: {
+    gap: 12,
+  },
+  supportOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: LAYOUT.radius.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '30',
+  },
+  supportIcon: {
+    fontSize: 20,
+    marginRight: 16,
+  },
+  supportOptionContent: {
+    flex: 1,
+  },
+  supportOptionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 2,
+  },
+  supportOptionText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  supportOptionHours: {
+    fontSize: 12,
+    color: COLORS.primary,
+    fontWeight: '500',
+  },
+  testimonialsContainer: {
+    marginBottom: 20,
+  },
+  testimonialsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+  },
+  testimonial: {
+    backgroundColor: COLORS.background,
+    borderRadius: LAYOUT.radius.lg,
+    padding: 16,
+    marginBottom: 12,
+  },
+  testimonialText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
+  testimonialAuthor: {
+    fontSize: 13,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  testimonialRating: {
+    alignItems: 'flex-start',
+  },
+  star: {
+    fontSize: 12,
+    color: '#FFD700',
+  },
+  bottomSection: {
+    paddingHorizontal: SPACING.lg * 1.5,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.gray200,
+    gap: 12,
+  },
+  shareButton: {
+    height: 48,
+    backgroundColor: COLORS.primary + '20',
+    borderRadius: LAYOUT.radius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.primary,
+  },
+  completeButton: {
+    height: 52,
+    backgroundColor: COLORS.primary,
+    borderRadius: LAYOUT.radius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  completeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.white,
+  },
+});
+
+export default ApplicationApprovedScreen;

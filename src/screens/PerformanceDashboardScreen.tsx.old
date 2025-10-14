@@ -1,0 +1,895 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
+  Dimensions,
+  Alert,
+} from 'react-native';
+import { BarChart3, TrendingUp, Award, Star, Target, ArrowLeft, Share2, Calendar, Package, CheckCircle, Map, Clock } from 'lucide-react-native';
+import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
+import { apiService } from '../services/api';
+import BottomNavigation from '../components/BottomNavigation';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+interface PerformanceDashboardScreenProps {
+  onBack: () => void;
+  onShare: () => void;
+  onChangeMonth: () => void;
+  onDownloadReport?: () => void;
+  onFilterChange?: (filter: string) => void;
+  onSharePerformance?: () => void;
+  onHomePress: () => void;
+  onJobsPress: () => void;
+  onProfilePress: () => void;
+}
+
+interface KeyMetric {
+  value: string;
+  label: string;
+  change: string;
+  change_type: 'positive' | 'negative' | 'neutral';
+  icon: string;
+}
+
+interface WeeklyBreakdown {
+  day: string;
+  deliveries: number;
+  distance: string;
+  rating: number;
+}
+
+interface PerformanceData {
+  period: string;
+  key_metrics: KeyMetric[];
+  monthly_overview: {
+    total_distance: string;
+    working_days: number;
+    fuel_efficiency: string;
+  };
+  delivery_trends: {
+    daily_data: Array<{
+      day: number;
+      deliveries: number;
+    }>;
+    peak_day: number;
+    delivery_range: string;
+  };
+  weekly_breakdown: WeeklyBreakdown[];
+}
+
+const PerformanceDashboardScreen: React.FC<PerformanceDashboardScreenProps> = React.memo(({
+  onBack,
+  onShare,
+  onChangeMonth,
+  onHomePress,
+  onJobsPress,
+  onProfilePress,
+}) => {
+  const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load performance data from API
+  useEffect(() => {
+    const loadPerformanceData = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.getRiderPerformance();
+        
+        if (response.success && response.data) {
+          // Transform API response or use mock data
+          const apiData = response.data;
+          setPerformanceData({
+            period: 'January 2024',
+            key_metrics: [
+              {
+                value: `${apiData.total_deliveries || 87}`,
+                label: 'Total deliveries',
+                change: '+12 from last month',
+                change_type: 'positive',
+                icon: 'package',
+              },
+              {
+                value: `${apiData.success_rate || 98.7}%`,
+                label: 'Successful deliveries',
+                change: 'Excellent rating',
+                change_type: 'positive',
+                icon: 'check',
+              },
+              {
+                value: `${apiData.distance || 856} km`,
+                label: 'This month',
+                change: '27.6 km/day average',
+                change_type: 'neutral',
+                icon: 'map',
+              },
+              {
+                value: `${apiData.on_time_rate || 94}%`,
+                label: 'On-time deliveries',
+                change: '3 min ahead average',
+                change_type: 'positive',
+                icon: 'clock',
+              },
+            ],
+            monthly_overview: {
+              total_distance: `${apiData.distance || 856} km`,
+              working_days: apiData.working_days || 22,
+              fuel_efficiency: '42 km/L',
+            },
+            delivery_trends: {
+              daily_data: [
+                { day: 1, deliveries: 3 },
+                { day: 2, deliveries: 4 },
+                { day: 3, deliveries: 2 },
+                { day: 4, deliveries: 5 },
+                { day: 5, deliveries: 3 },
+                { day: 6, deliveries: 4 },
+                { day: 7, deliveries: 2 },
+                { day: 8, deliveries: 6 },
+                { day: 9, deliveries: 4 },
+                { day: 10, deliveries: 3 },
+                { day: 11, deliveries: 5 },
+                { day: 12, deliveries: 4 },
+                { day: 13, deliveries: 2 },
+                { day: 14, deliveries: 3 },
+                { day: 15, deliveries: 5 },
+                { day: 16, deliveries: 4 },
+                { day: 17, deliveries: 6 },
+                { day: 18, deliveries: 6 },
+                { day: 19, deliveries: 5 },
+                { day: 20, deliveries: 6 },
+                { day: 21, deliveries: 4 },
+                { day: 22, deliveries: 3 },
+              ],
+              peak_day: 20,
+              delivery_range: '2-6 deliveries per day',
+            },
+            weekly_breakdown: [
+              { day: 'Monday', deliveries: 4, distance: '32 km', rating: 0 },
+              { day: 'Tuesday', deliveries: 3, distance: '28 km', rating: 0 },
+              { day: 'Wednesday', deliveries: 5, distance: '41 km', rating: 0 },
+              { day: 'Thursday', deliveries: 2, distance: '19 km', rating: 0 },
+              { day: 'Friday', deliveries: 4, distance: '35 km', rating: 0 },
+              { day: 'Saturday', deliveries: 3, distance: '27 km', rating: 0 },
+              { day: 'Sunday', deliveries: 1, distance: '8 km', rating: 0 },
+            ],
+          });
+        } else {
+          // API call succeeded but returned no data or success: false
+          console.log('API response unsuccessful or no data:', response);
+          // Use mock data as fallback (without ratings)
+          setPerformanceData({
+            period: 'January 2024',
+            key_metrics: [
+              {
+                value: '87',
+                label: 'Total deliveries',
+                change: '+12 from last month',
+                change_type: 'positive',
+                icon: 'package',
+              },
+              {
+                value: '98.7%',
+                label: 'Successful deliveries',
+                change: 'Excellent performance',
+                change_type: 'positive',
+                icon: 'check',
+              },
+              {
+                value: '856 km',
+                label: 'Distance covered',
+                change: '27.6 km/day average',
+                change_type: 'neutral',
+                icon: 'map',
+              },
+              {
+                value: '94%',
+                label: 'On-time deliveries',
+                change: '3 min ahead average',
+                change_type: 'positive',
+                icon: 'clock',
+              },
+            ],
+            monthly_overview: {
+              total_distance: '856 km',
+              working_days: 22,
+              fuel_efficiency: '42 km/L',
+            },
+            delivery_trends: {
+              daily_data: [
+                { day: 1, deliveries: 3 },
+                { day: 2, deliveries: 4 },
+                { day: 3, deliveries: 2 },
+                { day: 4, deliveries: 5 },
+                { day: 5, deliveries: 3 },
+                { day: 6, deliveries: 4 },
+                { day: 7, deliveries: 2 },
+                { day: 8, deliveries: 6 },
+                { day: 9, deliveries: 4 },
+                { day: 10, deliveries: 3 },
+                { day: 11, deliveries: 5 },
+                { day: 12, deliveries: 4 },
+                { day: 13, deliveries: 2 },
+                { day: 14, deliveries: 3 },
+                { day: 15, deliveries: 5 },
+                { day: 16, deliveries: 4 },
+                { day: 17, deliveries: 6 },
+                { day: 18, deliveries: 6 },
+                { day: 19, deliveries: 5 },
+                { day: 20, deliveries: 6 },
+                { day: 21, deliveries: 4 },
+                { day: 22, deliveries: 3 },
+              ],
+              peak_day: 20,
+              delivery_range: '2-6 deliveries per day',
+            },
+            weekly_breakdown: [
+              { day: 'Monday', deliveries: 4, distance: '32 km', rating: 0 },
+              { day: 'Tuesday', deliveries: 3, distance: '28 km', rating: 0 },
+              { day: 'Wednesday', deliveries: 5, distance: '41 km', rating: 0 },
+              { day: 'Thursday', deliveries: 2, distance: '19 km', rating: 0 },
+              { day: 'Friday', deliveries: 4, distance: '35 km', rating: 0 },
+              { day: 'Saturday', deliveries: 3, distance: '27 km', rating: 0 },
+              { day: 'Sunday', deliveries: 1, distance: '8 km', rating: 0 },
+            ],
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load performance data:', error);
+        // Use mock data as fallback (without ratings)
+        setPerformanceData({
+          period: 'January 2024',
+          key_metrics: [
+            {
+              value: '87',
+              label: 'Total deliveries',
+              change: '+12 from last month',
+              change_type: 'positive',
+              icon: '📦',
+            },
+            {
+              value: '98.7%',
+              label: 'Successful deliveries',
+              change: 'Excellent rating',
+              change_type: 'positive',
+              icon: '✅',
+            },
+            {
+              value: '856 km',
+              label: 'This month',
+              change: '27.6 km/day average',
+              change_type: 'neutral',
+              icon: '🛣️',
+            },
+            {
+              value: '94%',
+              label: 'On-time deliveries',
+              change: '3 min ahead average',
+              change_type: 'positive',
+              icon: '⏰',
+            },
+          ],
+          monthly_overview: {
+            total_distance: '856 km',
+            working_days: 22,
+            fuel_efficiency: '42 km/L',
+          },
+          delivery_trends: {
+            daily_data: [
+              { day: 1, deliveries: 3 },
+              { day: 2, deliveries: 4 },
+              { day: 3, deliveries: 2 },
+              { day: 4, deliveries: 5 },
+              { day: 5, deliveries: 3 },
+              { day: 6, deliveries: 4 },
+              { day: 7, deliveries: 2 },
+              { day: 8, deliveries: 6 },
+              { day: 9, deliveries: 4 },
+              { day: 10, deliveries: 3 },
+              { day: 11, deliveries: 5 },
+              { day: 12, deliveries: 4 },
+              { day: 13, deliveries: 2 },
+              { day: 14, deliveries: 3 },
+              { day: 15, deliveries: 5 },
+              { day: 16, deliveries: 4 },
+              { day: 17, deliveries: 6 },
+              { day: 18, deliveries: 6 },
+              { day: 19, deliveries: 5 },
+              { day: 20, deliveries: 6 },
+              { day: 21, deliveries: 4 },
+              { day: 22, deliveries: 3 },
+            ],
+            peak_day: 20,
+            delivery_range: '2-6 deliveries per day',
+          },
+          weekly_breakdown: [
+            { day: 'Monday', deliveries: 4, distance: '32 km', rating: 0 },
+            { day: 'Tuesday', deliveries: 3, distance: '28 km', rating: 0 },
+            { day: 'Wednesday', deliveries: 5, distance: '41 km', rating: 0 },
+            { day: 'Thursday', deliveries: 2, distance: '19 km', rating: 0 },
+            { day: 'Friday', deliveries: 4, distance: '35 km', rating: 0 },
+            { day: 'Saturday', deliveries: 3, distance: '27 km', rating: 0 },
+            { day: 'Sunday', deliveries: 1, distance: '8 km', rating: 0 },
+          ],
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPerformanceData();
+  }, []);
+
+  const handleSharePerformance = useCallback(() => {
+    Alert.alert(
+      'Share Performance',
+      'Share your performance report with supervisors or save for your records.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Share Report', onPress: onShare },
+      ]
+    );
+  }, [onShare]);
+
+  const handleChangeMonth = useCallback(() => {
+    Alert.alert(
+      'Change Period',
+      'Select a different month to view performance data.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Select Month', onPress: onChangeMonth },
+      ]
+    );
+  }, [onChangeMonth]);
+
+  const renderSimpleChart = () => {
+    if (!performanceData) return null;
+    
+    const maxDeliveries = Math.max(...performanceData.delivery_trends.daily_data.map(d => d.deliveries));
+    const chartHeight = 120;
+    const chartWidth = screenWidth - (SPACING.xl * 6); // Account for padding
+    const barWidth = chartWidth / performanceData.delivery_trends.daily_data.length;
+
+    return (
+      <View style={styles.chartContainer}>
+        <Text style={styles.chartTitle}>Daily Deliveries Trend</Text>
+        <View style={[styles.chart, { height: chartHeight }]}>
+          {performanceData.delivery_trends.daily_data.map((item, index) => {
+            const barHeight = (item.deliveries / maxDeliveries) * (chartHeight - 20);
+            return (
+              <View key={index} style={styles.barContainer}>
+                <View
+                  style={[
+                    styles.bar,
+                    {
+                      height: barHeight,
+                      width: barWidth - 2,
+                      backgroundColor: item.day === performanceData.delivery_trends.peak_day 
+                        ? COLORS.success 
+                        : COLORS.primary,
+                    },
+                  ]}
+                />
+                <Text style={styles.barLabel}>{item.day}</Text>
+              </View>
+            );
+          })}
+        </View>
+        <View style={styles.chartLegend}>
+          <Text style={styles.chartLegendText}>
+            Peak around day {performanceData.delivery_trends.peak_day} • Range: {performanceData.delivery_trends.delivery_range}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 0; i < Math.floor(rating); i++) {
+      stars.push(<Star key={i} size={12} color={COLORS.warning} fill={COLORS.warning} style={{ marginRight: 2 }} />);
+    }
+    return <View style={{ flexDirection: 'row', alignItems: 'center' }}>{stars}</View>;
+  };
+
+  // Show loading state
+  if (loading || !performanceData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ fontSize: 16, color: COLORS.textSecondary }}>Loading performance data...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onBack} style={styles.backButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <ArrowLeft size={24} color={COLORS.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Performance</Text>
+        <TouchableOpacity onPress={handleSharePerformance} style={styles.shareButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Share2 size={20} color={COLORS.textPrimary} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Period Selector */}
+        <View style={styles.periodCard}>
+          <TouchableOpacity style={styles.periodSelector} onPress={handleChangeMonth}>
+            <Text style={styles.periodLabel}>Period:</Text>
+            <View style={styles.periodValueContainer}>
+              <Text style={styles.periodValue}>{performanceData.period}</Text>
+              <Calendar size={18} color={COLORS.primary} />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Key Metrics */}
+        <View style={styles.metricsCard}>
+          <Text style={styles.sectionTitle}>KEY METRICS</Text>
+          
+          <View style={styles.metricsGrid}>
+            {performanceData.key_metrics.map((metric, index) => {
+              const IconComponent =
+                metric.icon === 'package' ? Package :
+                metric.icon === 'check' ? CheckCircle :
+                metric.icon === 'map' ? Map :
+                metric.icon === 'clock' ? Clock : Package;
+
+              return (
+                <View key={index} style={styles.metricItem}>
+                  <View style={styles.metricHeader}>
+                    <View style={styles.metricIconContainer}>
+                      <IconComponent size={20} color={COLORS.primary} />
+                    </View>
+                    <Text style={styles.metricValue}>{metric.value}</Text>
+                  </View>
+                  <Text style={styles.metricLabel}>{metric.label}</Text>
+                  <Text style={[
+                    styles.metricChange,
+                    metric.change_type === 'positive' ? styles.changePositive :
+                    metric.change_type === 'negative' ? styles.changeNegative : styles.changeNeutral
+                  ]}>
+                    {metric.change}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Monthly Overview */}
+        <View style={styles.overviewCard}>
+          <View style={styles.sectionHeader}>
+            <BarChart3 size={20} color={COLORS.primary} />
+            <Text style={styles.sectionTitle}>MONTHLY OVERVIEW</Text>
+          </View>
+          
+          <View style={styles.overviewDetails}>
+            <View style={styles.overviewItem}>
+              <Text style={styles.overviewLabel}>Total distance:</Text>
+              <Text style={styles.overviewValue}>{performanceData.monthly_overview.total_distance}</Text>
+            </View>
+            <View style={styles.overviewItem}>
+              <Text style={styles.overviewLabel}>Working days:</Text>
+              <Text style={styles.overviewValue}>{performanceData.monthly_overview.working_days} days</Text>
+            </View>
+            <View style={styles.overviewItem}>
+              <Text style={styles.overviewLabel}>Fuel efficiency:</Text>
+              <Text style={styles.overviewValue}>{performanceData.monthly_overview.fuel_efficiency}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Delivery Trends Chart */}
+        <View style={styles.trendsCard}>
+          <View style={styles.sectionHeader}>
+            <TrendingUp size={20} color={COLORS.primary} />
+            <Text style={styles.sectionTitle}>DELIVERY TRENDS</Text>
+          </View>
+          {renderSimpleChart()}
+        </View>
+
+        {/* Weekly Breakdown */}
+        <View style={styles.weeklyCard}>
+          <View style={styles.sectionHeader}>
+            <Calendar size={20} color={COLORS.primary} />
+            <Text style={styles.sectionTitle}>WEEKLY BREAKDOWN</Text>
+          </View>
+          
+          <View style={styles.weeklyList}>
+            {performanceData.weekly_breakdown.map((day, index) => (
+              <View key={index} style={styles.weeklyItem}>
+                <View style={styles.weeklyDay}>
+                  <Text style={styles.weeklyDayName}>{day.day}:</Text>
+                </View>
+                <View style={styles.weeklyStats}>
+                  <Text style={styles.weeklyStat}>{day.deliveries} deliveries</Text>
+                  <Text style={styles.weeklyStat}>{day.distance}</Text>
+                  <Text style={styles.weeklyRating}>{renderStars(day.rating)}{day.rating}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Performance Summary */}
+        <View style={styles.summaryCard}>
+          <Text style={styles.sectionTitle}>PERFORMANCE SUMMARY</Text>
+          
+          <View style={styles.summaryContent}>
+            <View style={styles.summaryHighlight}>
+              <View style={styles.summaryTitleRow}>
+                <Award size={18} color={COLORS.warning} />
+                <Text style={styles.summaryTitle}>Monthly Achievements</Text>
+              </View>
+              <Text style={styles.summaryText}>• Exceeded delivery targets by 15%</Text>
+              <Text style={styles.summaryText}>• Maintained 4.8+ star rating consistently</Text>
+              <Text style={styles.summaryText}>• Zero safety incidents reported</Text>
+              <Text style={styles.summaryText}>• 94% on-time delivery rate</Text>
+            </View>
+            
+            <View style={styles.summaryStats}>
+              <View style={styles.summaryTitleRow}>
+                <Target size={18} color={COLORS.primary} />
+                <Text style={styles.summaryTitle}>Key Numbers</Text>
+              </View>
+              <View style={styles.summaryStatsGrid}>
+                <View style={styles.summaryStatItem}>
+                  <Text style={styles.summaryStatNumber}>856</Text>
+                  <Text style={styles.summaryStatLabel}>Total KM</Text>
+                </View>
+                <View style={styles.summaryStatItem}>
+                  <Text style={styles.summaryStatNumber}>22</Text>
+                  <Text style={styles.summaryStatLabel}>Active Days</Text>
+                </View>
+                <View style={styles.summaryStatItem}>
+                  <Text style={styles.summaryStatNumber}>38.9</Text>
+                  <Text style={styles.summaryStatLabel}>KM/Day Avg</Text>
+                </View>
+                <View style={styles.summaryStatItem}>
+                  <Text style={styles.summaryStatNumber}>4.8</Text>
+                  <Text style={styles.summaryStatLabel}>Avg Rating</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation
+        activeTab="reports"
+        onHomePress={onHomePress}
+        onJobsPress={onJobsPress}
+        onReportsPress={() => {}}
+        onProfilePress={onProfilePress}
+      />
+    </SafeAreaView>
+  );
+});
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray200,
+  },
+  backButton: {
+    padding: SPACING.xs,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    flex: 1,
+    textAlign: 'center',
+  },
+  shareButton: {
+    padding: SPACING.xs,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: SPACING.xl,
+  },
+  periodCard: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.gray200,
+    borderRadius: LAYOUT.radius.lg,
+    padding: SPACING.xl,
+    marginVertical: SPACING.lg,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  periodSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  periodLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  periodValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 8,
+  },
+  periodValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  metricsCard: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.gray200,
+    borderRadius: LAYOUT.radius.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.lg,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textTertiary,
+    letterSpacing: 0.5,
+  },
+  summaryTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  metricItem: {
+    width: '48%',
+    backgroundColor: COLORS.background,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  metricHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  metricIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  metricValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  metricChange: {
+    fontSize: 10,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  changePositive: {
+    color: COLORS.success,
+  },
+  changeNegative: {
+    color: COLORS.error,
+  },
+  changeNeutral: {
+    color: COLORS.textTertiary,
+  },
+  overviewCard: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.gray200,
+    borderRadius: LAYOUT.radius.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.lg,
+  },
+  overviewDetails: {
+    gap: 12,
+  },
+  overviewItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  overviewLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  overviewValue: {
+    fontSize: 14,
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+  },
+  trendsCard: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.gray200,
+    borderRadius: LAYOUT.radius.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.lg,
+  },
+  chartContainer: {
+    alignItems: 'center',
+  },
+  chartTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+  },
+  chart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+  },
+  barContainer: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  bar: {
+    backgroundColor: COLORS.primary,
+    marginBottom: 4,
+    borderRadius: 1,
+  },
+  barLabel: {
+    fontSize: 8,
+    color: COLORS.textTertiary,
+    textAlign: 'center',
+  },
+  chartLegend: {
+    marginTop: 8,
+  },
+  chartLegendText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  weeklyCard: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.gray200,
+    borderRadius: LAYOUT.radius.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.lg,
+  },
+  weeklyList: {
+    gap: 12,
+  },
+  weeklyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    padding: 12,
+    borderRadius: 8,
+  },
+  weeklyDay: {
+    width: 80,
+  },
+  weeklyDayName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  weeklyStats: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  weeklyStat: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+  },
+  weeklyRating: {
+    fontSize: 12,
+    color: COLORS.textPrimary,
+    fontWeight: '500',
+  },
+  summaryCard: {
+    backgroundColor: COLORS.primary,
+    borderRadius: LAYOUT.radius.lg,
+    padding: SPACING.xl,
+    marginBottom: SPACING.xl,
+  },
+  summaryContent: {
+    gap: 20,
+  },
+  summaryHighlight: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 16,
+    borderRadius: 8,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.white,
+    marginBottom: 12,
+  },
+  summaryText: {
+    fontSize: 14,
+    color: COLORS.white,
+    marginBottom: 6,
+    lineHeight: 20,
+  },
+  summaryStats: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 16,
+    borderRadius: 8,
+  },
+  summaryStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  summaryStatItem: {
+    width: '45%',
+    alignItems: 'center',
+  },
+  summaryStatNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: COLORS.white,
+    marginBottom: 4,
+  },
+  summaryStatLabel: {
+    fontSize: 12,
+    color: COLORS.white,
+    textAlign: 'center',
+    opacity: 0.9,
+  },
+});
+
+export default PerformanceDashboardScreen;
