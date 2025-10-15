@@ -127,10 +127,23 @@ export default function App() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        // Ensure splash screen shows for minimum 2 seconds for better UX
+        const startTime = Date.now();
+
         const isAuth = await apiService.isAuthenticated();
         const user = await apiService.getStoredUser();
 
         console.log('Auth check - isAuth:', isAuth, 'user:', user);
+
+        // Calculate remaining time to show splash
+        const elapsedTime = Date.now() - startTime;
+        const minSplashTime = 2000; // 2 seconds minimum
+        const remainingTime = Math.max(0, minSplashTime - elapsedTime);
+
+        // Wait for remaining time before transitioning
+        if (remainingTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
 
         if (isAuth && user) {
           // User is authenticated, determine correct screen based on status
@@ -189,12 +202,12 @@ export default function App() {
             });
           }
         } else {
-          // No auth - start at splash/login flow
+          // No auth - go directly to phone entry (skip extra splash)
           console.log('No auth found - starting fresh login flow');
           updateAppState({
             isAuthenticated: false,
             user: null,
-            currentScreen: 'splash',
+            currentScreen: 'phone_entry',
             isInitializing: false
           });
         }
@@ -203,7 +216,7 @@ export default function App() {
         updateAppState({
           isAuthenticated: false,
           user: null,
-          currentScreen: 'splash',
+          currentScreen: 'phone_entry',
           isInitializing: false
         });
       }
@@ -240,8 +253,12 @@ export default function App() {
   // Splash Screen Handler
   const handleSplashFinish = () => {
     // Only proceed to phone entry if not initializing auth
+    console.log('📱 handleSplashFinish called, isInitializing:', appState.isInitializing);
     if (!appState.isInitializing) {
+      console.log('✅ Moving to phone_entry screen');
       updateAppState({ currentScreen: 'phone_entry' });
+    } else {
+      console.log('⏳ Still initializing, staying on splash');
     }
   };
 
@@ -720,14 +737,12 @@ export default function App() {
   // The app will check status on refresh and update automatically when approved
 
   const renderCurrentScreen = () => {
-    // Show splash screen during auth initialization
-    if (appState.isInitializing) {
+    // Show splash screen during auth initialization OR when explicitly on splash screen
+    if (appState.isInitializing || appState.currentScreen === 'splash') {
       return <SplashScreen onFinish={handleSplashFinish} />;
     }
 
     switch (appState.currentScreen) {
-      case 'splash':
-        return <SplashScreen onFinish={handleSplashFinish} />;
 
       case 'phone_entry':
         return (

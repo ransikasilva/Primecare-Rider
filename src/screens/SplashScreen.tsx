@@ -116,8 +116,9 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
     // Navigate after animation completes
     setTimeout(() => {
+      console.log('🎬 Splash screen finished, calling onFinish()');
       onFinish();
-    }, 3000);
+    }, 1500); // Reduced for faster navigation
   };
 
   const progressWidth = progressAnim.interpolate({

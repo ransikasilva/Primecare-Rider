@@ -19,9 +19,9 @@ interface EnvironmentConfig {
   };
 }
 
-// Development environment (local backend)
+// Development environment (now using deployed backend for screenshots)
 const developmentConfig: EnvironmentConfig = {
-  apiBaseUrl: 'http://192.168.1.4:8000/api',
+  apiBaseUrl: 'https://muxxr5mptd.ap-south-1.awsapprunner.com/api',
   apiTimeout: 30000,
   enableMockData: true,
   enableOfflineMode: true,
