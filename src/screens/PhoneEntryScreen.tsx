@@ -297,24 +297,6 @@ const PhoneEntryScreen: React.FC<PhoneEntryScreenProps> = ({ onNext, onLoginSucc
                 </LinearGradient>
               </TouchableOpacity>
 
-              {/* Dev Mode Button - Always show in development */}
-              {isDevelopment() ? (
-                <TouchableOpacity
-                  style={[styles.devButton, !isValid && styles.devButtonDisabled]}
-                  onPress={() => {
-                    console.log('🚀 Dev button pressed with phone:', phoneNumber);
-                    if (isValid) {
-                      handleDevBypass(`+94${phoneNumber.replace(/\s/g, '')}`);
-                    }
-                  }}
-                  disabled={isLoading || !isValid}
-                >
-                  <Text style={[styles.devButtonText, !isValid && styles.devButtonTextDisabled]}>
-                    🚀 Dev Login (Skip SMS)
-                  </Text>
-                </TouchableOpacity>
-              ) : null}
-
               {/* Legal Links */}
               <View style={styles.legalContainer}>
                 <Text style={styles.legalText}>
