@@ -117,7 +117,7 @@ const ApplicationUnderReviewScreen: React.FC<ApplicationUnderReviewScreenProps> 
   };
 
   const handleContactSupport = (type: 'call' | 'whatsapp') => {
-    const phoneNumber = '+94112345678';
+    const phoneNumber = '+94777884049';
     const url = type === 'call'
       ? `tel:${phoneNumber}`
       : `whatsapp://send?phone=${phoneNumber.replace('+', '')}&text=Hi, I need help with my rider application ${registrationData.applicationId}`;

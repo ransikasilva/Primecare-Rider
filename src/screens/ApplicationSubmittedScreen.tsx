@@ -144,7 +144,7 @@ const ApplicationSubmittedScreen: React.FC<ApplicationSubmittedScreenProps> = ({
                 <Text style={styles.supportIcon}>📞</Text>
                 <View style={styles.supportOptionContent}>
                   <Text style={styles.supportOptionTitle}>Call Support</Text>
-                  <Text style={styles.supportOptionText}>+94 11 234 5678</Text>
+                  <Text style={styles.supportOptionText}>+94 77 788 4049</Text>
                 </View>
               </TouchableOpacity>
 
@@ -152,7 +152,7 @@ const ApplicationSubmittedScreen: React.FC<ApplicationSubmittedScreenProps> = ({
                 <Text style={styles.supportIcon}>💬</Text>
                 <View style={styles.supportOptionContent}>
                   <Text style={styles.supportOptionTitle}>WhatsApp</Text>
-                  <Text style={styles.supportOptionText}>+94 77 234 5678</Text>
+                  <Text style={styles.supportOptionText}>+94 77 788 4049</Text>
                 </View>
               </TouchableOpacity>
 
@@ -160,7 +160,7 @@ const ApplicationSubmittedScreen: React.FC<ApplicationSubmittedScreenProps> = ({
                 <Text style={styles.supportIcon}>✉️</Text>
                 <View style={styles.supportOptionContent}>
                   <Text style={styles.supportOptionTitle}>Email Support</Text>
-                  <Text style={styles.supportOptionText}>support@primecare.lk</Text>
+                  <Text style={styles.supportOptionText}>transfleet.primecare@gmail.com</Text>
                 </View>
               </TouchableOpacity>
             </View>
