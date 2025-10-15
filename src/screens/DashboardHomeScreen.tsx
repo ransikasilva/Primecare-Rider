@@ -390,24 +390,6 @@ const DashboardHomeScreen: React.FC<DashboardHomeScreenProps> = ({
           </View>
         </View>
 
-        {/* Available Jobs - Premium Design */}
-        <View style={styles.jobsSection}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
-              <Package2 size={20} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>Available Jobs</Text>
-            </View>
-            <TouchableOpacity onPress={onViewAllJobs} style={styles.viewAllButton}>
-              <Text style={styles.viewAllText}>View All</Text>
-              <ChevronRight size={16} color={COLORS.primary} />
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.jobsScrollView}>
-            {nearbyJobs.map((job, index) => renderJobCard(job, index))}
-          </ScrollView>
-        </View>
-
         {/* Quick Actions - Professional Grid */}
         <View style={styles.actionsSection}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
