@@ -4,13 +4,14 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   ScrollView,
   RefreshControl,
   Linking,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { apiService } from '../services/api';
 

@@ -5,12 +5,13 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   RefreshControl,
   Dimensions,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { User, MapPin, Clock, ArrowRight, Flag, TrendingUp, Package, Package2, RotateCcw, AlertTriangle, Home, Briefcase, BarChart3, Settings, ChevronRight, Phone, Activity } from 'lucide-react-native';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { LinearGradient } from 'expo-linear-gradient';

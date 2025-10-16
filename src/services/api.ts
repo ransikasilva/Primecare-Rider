@@ -235,6 +235,15 @@ class ApiService {
     }
   }
 
+  async getRiderCurrentLocation(): Promise<ApiResponse> {
+    try {
+      const response: AxiosResponse<ApiResponse> = await this.client.get('/riders/current-location');
+      return response.data;
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
+  }
+
   // Hospital Methods
   async getAvailableHospitals(): Promise<ApiResponse> {
     try {

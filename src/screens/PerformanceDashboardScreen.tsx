@@ -4,7 +4,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   ScrollView,
   Dimensions,
@@ -13,6 +13,7 @@ import {
   Share,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { ArrowLeft, Share2, Calendar, Package, CheckCircle, Download, FileText } from 'lucide-react-native';
 import { COLORS, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';

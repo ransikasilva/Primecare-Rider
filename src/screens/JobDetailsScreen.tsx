@@ -4,12 +4,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   ScrollView,
   Alert,
   Linking,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { ArrowLeft, Share2, Bookmark, MapPin, Clock, Phone, AlertCircle, Package2, CheckCircle, Truck, Shield, TestTube, Hospital, Calendar, User, Gauge, Timer, TrendingUp } from 'lucide-react-native';
 import { apiService } from '../services/api';

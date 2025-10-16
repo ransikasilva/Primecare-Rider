@@ -4,12 +4,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   ScrollView,
   RefreshControl,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { ArrowLeft, RefreshCw, MapPin, Clock, Package, QrCode, ChevronRight, RotateCcw } from 'lucide-react-native';
 import BottomNavigation from '../components/BottomNavigation';

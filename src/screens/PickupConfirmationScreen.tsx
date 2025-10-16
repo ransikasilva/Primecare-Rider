@@ -4,13 +4,14 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   ScrollView,
   Alert,
   Animated,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { CheckCircle, Package, MapPin, Clock, Phone, ArrowRight, Camera, ArrowLeft, QrCode, Droplets, TestTube, Scale, Shield, AlertTriangle, Hospital, Gauge, Route, Lock, Headphones, CheckSquare, Square, Truck, Timer } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';

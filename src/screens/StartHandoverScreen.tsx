@@ -4,11 +4,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   ScrollView,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapPin, Wrench, Activity, Fuel, Clock, Navigation, AlertTriangle, ArrowLeft, CheckCircle2 } from 'lucide-react-native';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { apiService } from '../services/api';

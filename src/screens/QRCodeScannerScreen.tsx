@@ -4,7 +4,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   Alert,
   Vibration,
@@ -14,6 +14,7 @@ import {
   Dimensions,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { ArrowLeft, Camera, Flashlight, Package, CheckCircle, X, RefreshCw, QrCode, Info, Briefcase, Shield, Snowflake, Lock, Hand, FileCheck, AlertTriangle, AlertCircle, Lightbulb, Focus, Keyboard, Headphones, Clock, Gauge, TestTube, Wallet, Thermometer } from 'lucide-react-native';

@@ -5,7 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   Alert,
   Keyboard,
@@ -14,6 +14,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { VALIDATION } from '../utils/constants';
 import { CheckCircle, Info, Shield, ArrowRight, Clock } from 'lucide-react-native';

@@ -4,7 +4,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   Alert,
   Linking,
@@ -12,6 +12,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { ArrowLeft, Phone, Navigation, MapPin, Clock, CheckCircle, Package, Share, Route, Car, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react-native';
@@ -101,7 +102,10 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
   
   // Real GPS location tracking
   const { locationState, startTracking, stopTracking, getDistance } = useLocation();
-  
+
+  // Fallback location from database when GPS unavailable
+  const [fallbackLocation, setFallbackLocation] = useState<GPSLocationData | null>(null);
+
   // Dynamic destination data loaded from API
   const [destinationData, setDestinationData] = useState({
     latitude: 6.9271, // Default Colombo coordinates until API loads
@@ -126,18 +130,38 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
 
           if (isHandoverNavigation) {
             // Navigating to handover point for Rider B
+            if (!orderData.handover_point_lat || !orderData.handover_point_lng) {
+              console.error('❌ No valid handover coordinates');
+              Alert.alert('Error', 'Handover location not available. Please contact the other rider.');
+              return;
+            }
+
             setDestinationData({
-              latitude: orderData.handover_point_lat,
-              longitude: orderData.handover_point_lng,
+              latitude: parseFloat(orderData.handover_point_lat),
+              longitude: parseFloat(orderData.handover_point_lng),
               name: `Handover with ${orderData.rider_name || 'Rider'}`,
               address: 'Handover Meeting Point',
               phone: orderData.rider_phone || orderData.center_phone || '',
             });
           } else {
             // Normal navigation to collection center
+            // Try multiple possible coordinate field names from backend
+            const lat = orderData.center_coordinates?.lat ||
+                       orderData.pickup_location_lat ||
+                       orderData.locations?.pickup?.lat;
+            const lng = orderData.center_coordinates?.lng ||
+                       orderData.pickup_location_lng ||
+                       orderData.locations?.pickup?.lng;
+
+            if (!lat || !lng) {
+              console.error('❌ No valid coordinates found for collection center');
+              Alert.alert('Error', 'Collection center location not available. Please contact support.');
+              return;
+            }
+
             setDestinationData({
-              latitude: orderData.center_coordinates?.lat,
-              longitude: orderData.center_coordinates?.lng,
+              latitude: parseFloat(lat),
+              longitude: parseFloat(lng),
               name: orderData.center_name || 'Collection Center',
               address: orderData.center_address || 'Address not available',
               phone: orderData.center_phone || '',
@@ -205,10 +229,45 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
           console.log('✅ Background GPS tracking started for pickup navigation');
         }
       } else {
+        // GPS not available - try to use rider's last known location from database
         Alert.alert(
-          'Navigation Required',
-          'GPS tracking is needed for navigation. Please enable location services.',
-          [{ text: 'OK' }]
+          'Enable Location Services',
+          'GPS is needed for accurate navigation. Would you like to enable it now, or use your last known location?',
+          [
+            {
+              text: 'Use Last Location',
+              onPress: async () => {
+                console.log('📍 Fetching rider last known location from database...');
+                try {
+                  const response = await apiService.getRiderCurrentLocation();
+                  if (response.success && response.data?.location) {
+                    const { lat, lng } = response.data.location;
+                    console.log('✅ Using database location:', { lat, lng });
+
+                    // Set fallback location
+                    setFallbackLocation({
+                      latitude: lat,
+                      longitude: lng,
+                      accuracy: 100, // Database location, less accurate
+                      timestamp: Date.now(),
+                    });
+                  } else {
+                    Alert.alert('Error', 'Could not retrieve your last known location. Please enable GPS.');
+                  }
+                } catch (error) {
+                  console.error('Failed to fetch last location:', error);
+                  Alert.alert('Error', 'Could not retrieve your last known location. Please enable GPS.');
+                }
+              }
+            },
+            {
+              text: 'Enable GPS',
+              style: 'default',
+              onPress: () => {
+                Alert.alert('Enable GPS', 'Please enable location services in your device settings and restart the app.');
+              }
+            }
+          ]
         );
       }
     };
@@ -231,19 +290,19 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
     };
   }, []);
 
-  // Load route when GPS location becomes available
+  // Load route when GPS location or fallback location becomes available
   useEffect(() => {
-    if (locationState.currentLocation && destinationData.latitude && destinationData.latitude !== 0) {
-      console.log('📍 GPS location available, loading route to pickup...');
+    const currentLoc = locationState.currentLocation || fallbackLocation;
+    if (currentLoc && destinationData.latitude && destinationData.latitude !== 0) {
+      console.log('📍 Location available (GPS or fallback), loading route to pickup...');
       loadRoute();
     }
-  }, [locationState.currentLocation, destinationData.latitude]);
+  }, [locationState.currentLocation, fallbackLocation, destinationData.latitude]);
 
   // Function to load route from backend
   const loadRoute = async () => {
-    if (!locationState.currentLocation) return;
-
-    const currentLoc = locationState.currentLocation;
+    const currentLoc = locationState.currentLocation || fallbackLocation;
+    if (!currentLoc) return;
     const destination = {
       lat: destinationData.latitude,
       lng: destinationData.longitude
@@ -272,6 +331,12 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
         routePoints: directionsResult.route?.length || 0
       });
 
+      // Filter out any invalid coordinates from route
+      const validRoute = (directionsResult.route || []).filter((coord: any) =>
+        coord && coord.latitude != null && coord.longitude != null &&
+        !isNaN(parseFloat(coord.latitude)) && !isNaN(parseFloat(coord.longitude))
+      );
+
       setNavigationData(prev => ({
         ...prev,
         currentLocation: {
@@ -282,7 +347,7 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
           latitude: destination.lat,
           longitude: destination.lng,
         },
-        route: directionsResult.route || [], // Real route polyline points
+        route: validRoute, // Real route polyline points - validated
         remainingDistance,
         remainingKm: distanceKm,
         estimatedTime,

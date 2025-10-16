@@ -4,7 +4,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   Alert,
   Linking,
@@ -13,6 +13,7 @@ import {
   Dimensions,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { ArrowLeft, Phone, Navigation, MapPin, Clock, CheckCircle, RotateCcw, Share, Hospital, Package, Truck, Car, AlertTriangle, Timer, FlaskConical, Thermometer, Shield, User, Route } from 'lucide-react-native';
@@ -163,9 +164,25 @@ const NavigateToHospitalScreen: React.FC<NavigateToHospitalScreenProps> = ({
 
           console.log('📦 Order delivery_location:', orderData.delivery_location);
 
+          // Try multiple possible coordinate field names from backend
+          const lat = orderData.delivery_location?.lat ||
+                     orderData.hospital_coordinates?.lat ||
+                     orderData.delivery_location_lat ||
+                     orderData.locations?.delivery?.lat;
+          const lng = orderData.delivery_location?.lng ||
+                     orderData.hospital_coordinates?.lng ||
+                     orderData.delivery_location_lng ||
+                     orderData.locations?.delivery?.lng;
+
+          if (!lat || !lng) {
+            console.error('❌ No valid coordinates found for hospital');
+            Alert.alert('Error', 'Hospital location not available. Please contact support.');
+            return;
+          }
+
           const hospitalInfo = {
-            latitude: orderData.delivery_location?.lat || orderData.hospital_coordinates?.lat,
-            longitude: orderData.delivery_location?.lng || orderData.hospital_coordinates?.lng,
+            latitude: parseFloat(lat),
+            longitude: parseFloat(lng),
             name: orderData.delivery_location?.name || orderData.hospital_name || 'Hospital',
             address: orderData.delivery_location?.address || orderData.hospital_address || 'Hospital address',
             phone: orderData.delivery_location?.phone || orderData.hospital_phone || '',
@@ -206,13 +223,20 @@ const NavigateToHospitalScreen: React.FC<NavigateToHospitalScreenProps> = ({
       if (response.success && response.data?.route) {
         console.log('🗺️ Route points count:', response.data.route.length);
 
-        // Convert route to coordinate array for Polyline
-        const routeCoordinates = response.data.route.map((point: any) => ({
-          latitude: point.lat || point.latitude,
-          longitude: point.lng || point.longitude,
-        }));
+        // Convert route to coordinate array for Polyline - filter out invalid points
+        const routeCoordinates = response.data.route
+          .map((point: any) => ({
+            latitude: parseFloat(point.lat || point.latitude),
+            longitude: parseFloat(point.lng || point.longitude),
+          }))
+          .filter((coord: any) =>
+            !isNaN(coord.latitude) &&
+            !isNaN(coord.longitude) &&
+            coord.latitude !== null &&
+            coord.longitude !== null
+          );
 
-        console.log('🗺️ Setting route with', routeCoordinates.length, 'points');
+        console.log('🗺️ Setting route with', routeCoordinates.length, 'valid points');
 
         setNavigationData(prev => ({
           ...prev,

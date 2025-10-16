@@ -4,12 +4,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+
   StatusBar,
   ScrollView,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 import { ArrowLeft, Hospital as HospitalIcon, MapPin, Check, Info, ChevronDown, ChevronUp, CheckCircle, Truck, Navigation, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
