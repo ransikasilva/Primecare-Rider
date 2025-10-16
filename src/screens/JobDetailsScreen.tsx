@@ -313,23 +313,37 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
     try {
       setLoadingDistances(true);
       
-      // Extract coordinates from order data (nested under locations)
+      // Extract coordinates from order data with safe fallbacks
+      let pickupLat = 0;
+      let pickupLng = 0;
+      let deliveryLat = 0;
+      let deliveryLng = 0;
+
+      try {
+        pickupLat = parseFloat(orderData.locations?.pickup?.lat ||
+                     orderData.pickup_location_lat ||
+                     orderData.pickup_location?.lat || 0);
+        pickupLng = parseFloat(orderData.locations?.pickup?.lng ||
+                      orderData.pickup_location_lng ||
+                      orderData.pickup_location?.lng || 0);
+        deliveryLat = parseFloat(orderData.locations?.delivery?.lat ||
+                       orderData.delivery_location_lat ||
+                       orderData.delivery_location?.lat || 0);
+        deliveryLng = parseFloat(orderData.locations?.delivery?.lng ||
+                        orderData.delivery_location_lng ||
+                        orderData.delivery_location?.lng || 0);
+      } catch (error) {
+        console.error('Error parsing coordinates:', error);
+      }
+
       const pickupCoords = {
-        latitude: parseFloat(orderData.locations?.pickup?.lat || 
-                   orderData.pickup_location_lat || 
-                   orderData.pickup_location?.lat || 0),
-        longitude: parseFloat(orderData.locations?.pickup?.lng || 
-                    orderData.pickup_location_lng || 
-                    orderData.pickup_location?.lng || 0)
+        latitude: pickupLat,
+        longitude: pickupLng
       };
 
       const deliveryCoords = {
-        latitude: parseFloat(orderData.locations?.delivery?.lat || 
-                   orderData.delivery_location_lat || 
-                   orderData.delivery_location?.lat || 0),
-        longitude: parseFloat(orderData.locations?.delivery?.lng || 
-                    orderData.delivery_location_lng || 
-                    orderData.delivery_location?.lng || 0)
+        latitude: deliveryLat,
+        longitude: deliveryLng
       };
 
       console.log('📍 Calculating distances from rider location to:', {
