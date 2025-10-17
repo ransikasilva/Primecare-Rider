@@ -224,6 +224,10 @@ const QRCodeScannerScreen: React.FC<QRCodeScannerScreenProps> = React.memo(({
           // Get rider's current location
           const currentLocation = await locationService.getCurrentLocation();
 
+          if (!currentLocation || !currentLocation.coords) {
+            throw new Error('Unable to get your current location. Please ensure location services are enabled.');
+          }
+
           // Parse QR code to determine type
           const parsedQR = JSON.parse(qrData);
           let scanType = 'pickup_confirm';
