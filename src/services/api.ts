@@ -474,15 +474,15 @@ class ApiService {
         scan_type: scanType,
         timestamp: new Date().toISOString(),
       };
-      
+
       if (location) {
         payload.scan_location = 'GPS Location';
-        payload.scan_coordinates = {
+        payload.coordinates = {
           lat: location.latitude,
           lng: location.longitude,
         };
       }
-      
+
       const response: AxiosResponse<ApiResponse> = await this.client.post('/qr/scan', payload);
       return response.data;
     } catch (error: any) {
@@ -613,7 +613,7 @@ class ApiService {
 
       if (location) {
         payload.scan_location = 'GPS Location';
-        payload.scan_coordinates = {
+        payload.coordinates = {
           lat: location.latitude,
           lng: location.longitude,
         };

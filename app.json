@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.primecare.rider",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "PrimeCare needs location access to track deliveries and provide accurate navigation to pickup and delivery locations.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "PrimeCare needs location access to track deliveries and provide accurate navigation to pickup and delivery locations.",
@@ -26,7 +26,7 @@
     },
     "android": {
       "package": "com.primecare.rider",
-      "versionCode": 7,
+      "versionCode": 8,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
