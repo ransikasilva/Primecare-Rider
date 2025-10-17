@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar, AppState as RNAppState, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { locationService } from './src/services/locationService';
 import { apiService } from './src/services/api';
 
@@ -816,9 +817,9 @@ export default function App() {
             onViewAllJobs={handleViewAllJobs}
             onKMReport={handleViewPerformance}
             onProfile={handleViewProfile}
-            onEmergency={() => console.log('Emergency')}
-            onSupport={() => console.log('Support')}
-            onReportIssue={() => console.log('Report Issue')}
+            onEmergency={() => Linking.openURL('tel:+94777884049')}
+            onSupport={() => Linking.openURL('tel:+94777884049')}
+            onReportIssue={() => Linking.openURL('tel:+94777884049')}
           />
         );
 
@@ -1080,9 +1081,11 @@ export default function App() {
   };
 
   return (
-    <ErrorBoundary>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      {renderCurrentScreen()}
-    </ErrorBoundary>
+    <SafeAreaProvider>
+      <ErrorBoundary>
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+        {renderCurrentScreen()}
+      </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }

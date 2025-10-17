@@ -482,7 +482,8 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+        <View style={styles.headerBackground} />
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.8}>
             <ArrowLeft size={24} color={COLORS.textPrimary} />
@@ -502,7 +503,8 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
   if (!jobDetails) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+        <View style={styles.headerBackground} />
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.8}>
             <ArrowLeft size={24} color={COLORS.textPrimary} />
@@ -768,6 +770,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  headerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+    backgroundColor: COLORS.white,
+    zIndex: -1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -775,8 +786,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.lg,
     backgroundColor: COLORS.white,
-    borderBottomWidth: LAYOUT.borderWidth.thin,
-    borderBottomColor: COLORS.gray200,
     ...SHADOWS.sm,
   },
   backButton: {

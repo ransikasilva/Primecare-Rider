@@ -9,20 +9,16 @@ import {
   Alert,
   Linking,
   Platform,
-  Animated,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
-import { ArrowLeft, Phone, Navigation, MapPin, Clock, CheckCircle, Package, Share, Route, Car, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react-native';
+import { ArrowLeft, Phone, Navigation, MapPin, Clock, CheckCircle, Package, Share, Route, Car } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocation, LocationData as GPSLocationData } from '../hooks/useLocation';
 import { distanceService } from '../services/distanceService';
 import { apiService } from '../services/api';
 import { locationService } from '../services/locationService';
-
-const { height: screenHeight } = Dimensions.get('window');
 
 interface NavigationToPickupScreenProps {
   jobId: string;
@@ -69,7 +65,6 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
   onMoreOptions,
 }) => {
   const [isNavigating, setIsNavigating] = useState(true);
-  const [showDetails, setShowDetails] = useState(false);
   const mapRef = useRef<MapView>(null);
 
   // Function to open Google Maps navigation
@@ -95,11 +90,7 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
     }
   };
   const [loading, setLoading] = useState(true);
-  
-  const slideAnimation = useRef(new Animated.Value(screenHeight * 0.55)).current;
-  const speedPulse = useRef(new Animated.Value(1)).current;
-  const handleOpacity = useRef(new Animated.Value(0.6)).current;
-  
+
   // Real GPS location tracking
   const { locationState, startTracking, stopTracking, getDistance } = useLocation();
 
@@ -210,8 +201,6 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
 
   // Start GPS tracking when component mounts
   useEffect(() => {
-    let speedAnimation: any;
-
     const initializeNavigation = async () => {
       // Start location tracking
       const trackingStarted = await startTracking({
@@ -272,19 +261,9 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
       }
     };
 
-    // Speed monitoring animation
-    speedAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(speedPulse, { toValue: 1.1, duration: 1000, useNativeDriver: true }),
-        Animated.timing(speedPulse, { toValue: 1, duration: 1000, useNativeDriver: true }),
-      ])
-    );
-    speedAnimation.start();
-
     initializeNavigation();
 
     return () => {
-      speedAnimation?.stop();
       stopTracking(); // Stop tracking when component unmounts
       // Note: Don't stop background tracking here - it continues to hospital
     };
@@ -427,25 +406,6 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
     }
   }, [locationState.currentLocation]);
 
-  const handleToggleDetails = () => {
-    const toValue = showDetails ? screenHeight * 0.55 : screenHeight * 0.12;
-    setShowDetails(!showDetails);
-    
-    // Animate panel slide
-    Animated.spring(slideAnimation, {
-      toValue,
-      useNativeDriver: false,
-      tension: 100,
-      friction: 8,
-    }).start();
-
-    // Animate handle feedback
-    Animated.sequence([
-      Animated.timing(handleOpacity, { toValue: 1, duration: 100, useNativeDriver: true }),
-      Animated.timing(handleOpacity, { toValue: 0.6, duration: 200, useNativeDriver: true })
-    ]).start();
-  };
-
   const handleOpenGoogleMaps = async () => {
     const { destination, currentLocation } = navigationData;
     
@@ -469,7 +429,11 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
   };
 
   const handleCallCenter = () => {
-    const url = `tel:${navigationData.destination_phone}`;
+    if (!destinationData.phone) {
+      Alert.alert('Error', 'Phone number not available');
+      return;
+    }
+    const url = `tel:${destinationData.phone}`;
     Linking.openURL(url).catch(() => {
       Alert.alert('Error', 'Unable to make phone call');
     });
@@ -621,73 +585,29 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
         </View>
       </View>
 
-      {/* Professional Sliding Bottom Panel */}
-      <Animated.View style={[styles.bottomPanel, { top: slideAnimation }]}>
-        <TouchableOpacity style={styles.panelHandle} onPress={handleToggleDetails} activeOpacity={0.7}>
-          <Animated.View style={[styles.handleBar, { opacity: handleOpacity }]} />
-          <View style={styles.handleIconContainer}>
-            {showDetails ? (
-              <ArrowDown size={24} color={COLORS.primary} />
-            ) : (
-              <ArrowUp size={24} color={COLORS.primary} />
-            )}
+      {/* Bottom Panel - Static (no sliding) */}
+      <View style={styles.bottomPanel}>
+        {/* Destination Info */}
+        <View style={styles.destinationCard}>
+          <View style={styles.destinationHeader}>
+            <MapPin size={20} color={COLORS.primary} />
+            <View style={styles.destinationInfo}>
+              <Text style={styles.destinationName}>{destinationData.name}</Text>
+            </View>
           </View>
-          <Text style={styles.panelHandleText}>
-            {showDetails ? 'Tap to minimize details' : 'Tap to view full details'}
-          </Text>
-        </TouchableOpacity>
 
-        {/* Quick Navigation Info */}
-        <View style={styles.quickInfo}>
-          <View style={styles.instructionCard}>
-            <ArrowRight size={20} color={COLORS.primary} />
-            <Text style={styles.currentInstruction}>{navigationData.routeInstructions}</Text>
-          </View>
-          <Text style={styles.nextInstruction}>{navigationData.nextInstruction}</Text>
+          {/* Call Button */}
+          {destinationData.phone && (
+            <TouchableOpacity style={styles.callButton} onPress={handleCallCenter} activeOpacity={0.8}>
+              <Phone size={18} color={COLORS.white} />
+              <Text style={styles.callButtonText}>
+                Call {destinationData.name.includes('Handover') ? 'Rider' : 'Collection Center'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Weather Alert */}
-        {navigationData.weatherAlert && (
-          <View style={styles.weatherAlert}>
-            <CheckCircle size={16} color={COLORS.warning} />
-            <Text style={styles.weatherAlertText}>{navigationData.weatherAlert}</Text>
-          </View>
-        )}
-
-        {/* Detailed Information (shows when expanded) */}
-        {showDetails && (
-          <View style={styles.detailsContent}>
-            {/* Destination Details */}
-            <View style={styles.destinationCard}>
-              <View style={styles.destinationHeader}>
-                <MapPin size={20} color={COLORS.primary} />
-                <Text style={styles.destinationTitle}>PICKUP LOCATION</Text>
-                <View style={styles.priorityBadge}>
-                  <Text style={styles.priorityText}>{navigationData.priority}</Text>
-                </View>
-              </View>
-              
-              <Text style={styles.destinationName}>{navigationData.destination_name}</Text>
-              <Text style={styles.destinationAddress}>{navigationData.destination_address}</Text>
-              
-              <View style={styles.contactCard}>
-                <View style={styles.contactInfo}>
-                  <Text style={styles.contactName}>Collection Center</Text>
-                  <Text style={styles.contactPhone}>{navigationData.destination_phone}</Text>
-                </View>
-                <TouchableOpacity style={styles.callButton} onPress={handleCallCenter} activeOpacity={0.8}>
-                  <Phone size={16} color={COLORS.white} />
-                  <Text style={styles.callButtonText}>Call</Text>
-                </TouchableOpacity>
-              </View>
-
-            </View>
-
-
-          </View>
-        )}
-
-        {/* Always show Action Buttons - even when collapsed */}
+        {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={[
@@ -721,7 +641,7 @@ const NavigationToPickupScreen: React.FC<NavigationToPickupScreenProps> = ({
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </Animated.View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -910,10 +830,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: LAYOUT.radius.xl,
     borderTopRightRadius: LAYOUT.radius.xl,
     paddingHorizontal: SPACING.xl,
-    paddingBottom: SPACING.xl + 40, // Extra padding for buttons
+    paddingTop: SPACING.lg,
+    paddingBottom: SPACING.xl,
     ...SHADOWS.xl,
-    minHeight: screenHeight * 0.15,
-    maxHeight: screenHeight * 0.60,
   },
   panelHandle: {
     alignItems: 'center',
@@ -983,19 +902,17 @@ const styles = StyleSheet.create({
   },
   destinationCard: {
     backgroundColor: COLORS.gray50,
-    borderRadius: LAYOUT.radius.xl,
+    borderRadius: LAYOUT.radius.lg,
     padding: SPACING.lg,
+    marginBottom: SPACING.md,
   },
   destinationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: SPACING.md,
     marginBottom: SPACING.md,
-    gap: SPACING.sm,
   },
-  destinationTitle: {
-    ...TYPOGRAPHY.styles.label,
-    color: COLORS.primary,
-    fontWeight: '700',
+  destinationInfo: {
     flex: 1,
   },
   priorityBadge: {
@@ -1010,16 +927,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   destinationName: {
-    ...TYPOGRAPHY.styles.bodyLarge,
+    ...TYPOGRAPHY.styles.body,
     color: COLORS.textPrimary,
-    fontWeight: '700',
-    marginBottom: SPACING.sm,
+    fontWeight: '600',
+    marginBottom: SPACING.xs,
   },
   destinationAddress: {
-    ...TYPOGRAPHY.styles.body,
+    ...TYPOGRAPHY.styles.bodySmall,
     color: COLORS.textSecondary,
-    lineHeight: 20,
-    marginBottom: SPACING.md,
+    lineHeight: 18,
   },
   contactCard: {
     flexDirection: 'row',
@@ -1046,23 +962,19 @@ const styles = StyleSheet.create({
   callButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
+    paddingVertical: SPACING.md,
     borderRadius: LAYOUT.radius.lg,
-    gap: SPACING.xs,
+    gap: SPACING.sm,
   },
   callButtonText: {
-    ...TYPOGRAPHY.styles.bodySmall,
+    ...TYPOGRAPHY.styles.body,
     color: COLORS.white,
     fontWeight: '600',
   },
   actionButtons: {
     gap: SPACING.md,
-    paddingTop: SPACING.md,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray100,
   },
   arrivedButton: {
     borderRadius: LAYOUT.radius.xl,

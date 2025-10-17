@@ -540,7 +540,11 @@ const NavigateToHospitalScreen: React.FC<NavigateToHospitalScreenProps> = ({
   };
 
   const handleCallHospital = () => {
-    const url = `tel:${navigationData.hospital_phone}`;
+    if (!hospitalData.phone) {
+      Alert.alert('Error', 'Hospital phone number not available');
+      return;
+    }
+    const url = `tel:${hospitalData.phone}`;
     Linking.openURL(url).catch(() => {
       Alert.alert('Error', 'Unable to make phone call');
     });
@@ -725,8 +729,26 @@ const NavigateToHospitalScreen: React.FC<NavigateToHospitalScreenProps> = ({
         </View>
       </View>
 
-      {/* Simple Bottom Panel with Two Buttons */}
+      {/* Bottom Panel - Static */}
       <View style={styles.bottomPanel}>
+        {/* Hospital Info */}
+        <View style={styles.destinationCard}>
+          <View style={styles.destinationHeader}>
+            <Hospital size={20} color={COLORS.success} />
+            <View style={styles.destinationInfo}>
+              <Text style={styles.destinationName}>{hospitalData.name}</Text>
+            </View>
+          </View>
+
+          {/* Call Button */}
+          {hospitalData.phone && (
+            <TouchableOpacity style={styles.callButton} onPress={handleCallHospital} activeOpacity={0.8}>
+              <Phone size={18} color={COLORS.white} />
+              <Text style={styles.callButtonText}>Call Hospital</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity
@@ -1070,6 +1092,40 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xl,
     ...SHADOWS.xl,
   },
+  destinationCard: {
+    backgroundColor: COLORS.gray50,
+    borderRadius: LAYOUT.radius.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  destinationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  destinationInfo: {
+    flex: 1,
+  },
+  destinationName: {
+    ...TYPOGRAPHY.styles.body,
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+  },
+  callButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    paddingVertical: SPACING.md,
+    borderRadius: LAYOUT.radius.lg,
+    gap: SPACING.sm,
+  },
+  callButtonText: {
+    ...TYPOGRAPHY.styles.body,
+    color: COLORS.white,
+    fontWeight: '600',
+  },
   panelHandle: {
     alignItems: 'center',
     paddingVertical: SPACING.lg,
@@ -1203,20 +1259,6 @@ const styles = StyleSheet.create({
   contactPhone: {
     ...TYPOGRAPHY.styles.bodySmall,
     color: COLORS.textSecondary,
-  },
-  callButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: LAYOUT.radius.lg,
-    gap: SPACING.xs,
-  },
-  callButtonText: {
-    ...TYPOGRAPHY.styles.bodySmall,
-    color: COLORS.white,
-    fontWeight: '600',
   },
   instructionsCard: {
     backgroundColor: COLORS.success + '10',

@@ -368,24 +368,26 @@ const DashboardHomeScreen: React.FC<DashboardHomeScreenProps> = ({
           </View>
 
           {/* World-Class Quick Stats */}
-          <View style={styles.quickStatsGrid}>
-            <View style={styles.quickStatCard}>
-              <View style={styles.quickStatIcon}>
-                <Package size={16} color={COLORS.primary} />
+          <View style={styles.mainStatsGrid}>
+            <View style={styles.worldClassCard}>
+              <View style={styles.cardIconContainer}>
+                <Package size={18} color={COLORS.primary} />
               </View>
-              <View style={styles.quickStatContent}>
-                <Text style={styles.quickStatValue}>{stats.todayDistance}</Text>
-                <Text style={styles.quickStatLabel}>km today</Text>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardValue}>{stats.todayDistance}</Text>
+                <Text style={styles.cardLabel}>KM Today</Text>
+                <Text style={styles.cardSubtext}>This shift</Text>
               </View>
             </View>
-            
-            <View style={styles.quickStatCard}>
-              <View style={styles.quickStatIcon}>
-                <Clock size={16} color={COLORS.warning} />
+
+            <View style={styles.worldClassCard}>
+              <View style={styles.cardIconContainer}>
+                <Clock size={18} color={COLORS.warning} />
               </View>
-              <View style={styles.quickStatContent}>
-                <Text style={styles.quickStatValue}>{stats.pendingJobs}</Text>
-                <Text style={styles.quickStatLabel}>pending</Text>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardValue}>{stats.pendingJobs}</Text>
+                <Text style={styles.cardLabel}>Pending</Text>
+                <Text style={styles.cardSubtext}>Active jobs</Text>
               </View>
             </View>
           </View>

@@ -260,15 +260,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = React.memo(({
             <Hospital size={16} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>HOSPITAL PARTNERSHIP</Text>
           </View>
-          
+
           <View style={styles.partnershipInfo}>
             <View style={styles.partnershipItem}>
               <Text style={styles.partnershipLabel}>Hospital:</Text>
               <Text style={styles.partnershipValue}>{profileData.hospital_partnership.hospital_name}</Text>
-            </View>
-            <View style={styles.partnershipItem}>
-              <Text style={styles.partnershipLabel}>Affiliation:</Text>
-              <Text style={styles.partnershipValue}>Since {profileData.hospital_partnership.affiliation_date}</Text>
             </View>
             <View style={styles.partnershipStatus}>
               <Text style={styles.partnershipLabel}>Status:</Text>
@@ -294,20 +290,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = React.memo(({
               <Text style={styles.detailLabel}>Full Name:</Text>
               <Text style={styles.detailValue}>{profileData.personal_info.full_name}</Text>
             </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>NIC:</Text>
-              <Text style={styles.detailValue}>{profileData.personal_info.nic}</Text>
-            </View>
+            {profileData.personal_info.nic && profileData.personal_info.nic !== 'N/A' && (
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>NIC:</Text>
+                <Text style={styles.detailValue}>{profileData.personal_info.nic}</Text>
+              </View>
+            )}
             <View style={styles.detailItem}>
               <Text style={styles.detailLabel}>Phone:</Text>
               <View style={styles.detailValueContainer}>
                 <Text style={styles.detailValue}>{profileData.personal_info.phone}</Text>
                 <CheckCircle size={16} color={COLORS.success} />
               </View>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Email:</Text>
-              <Text style={styles.detailValue}>{profileData.personal_info.email}</Text>
             </View>
           </View>
         </View>
@@ -320,25 +314,27 @@ const ProfileScreen: React.FC<ProfileScreenProps> = React.memo(({
           </View>
           
           <View style={styles.vehicleInfo}>
-            <View style={styles.vehicleItem}>
-              <Text style={styles.vehicleLabel}>Type:</Text>
-              <Text style={styles.vehicleValue}>{profileData.vehicle_details.type}</Text>
-            </View>
-            <View style={styles.vehicleItem}>
-              <Text style={styles.vehicleLabel}>Make/Model:</Text>
-              <Text style={styles.vehicleValue}>{profileData.vehicle_details.make_model}</Text>
-            </View>
-            <View style={styles.vehicleItem}>
-              <Text style={styles.vehicleLabel}>Registration:</Text>
-              <Text style={styles.vehicleValue}>{profileData.vehicle_details.registration}</Text>
-            </View>
-            <View style={styles.vehicleItem}>
-              <Text style={styles.vehicleLabel}>Insurance:</Text>
-              <View style={styles.vehicleValueContainer}>
-                <Text style={styles.vehicleValue}>Valid until {profileData.vehicle_details.insurance_valid_until}</Text>
-                <CheckCircle size={16} color={COLORS.success} />
+            {profileData.vehicle_details.type && profileData.vehicle_details.type !== 'N/A' && (
+              <View style={styles.vehicleItem}>
+                <Text style={styles.vehicleLabel}>Type:</Text>
+                <Text style={styles.vehicleValue}>{profileData.vehicle_details.type}</Text>
               </View>
-            </View>
+            )}
+            {profileData.vehicle_details.registration && profileData.vehicle_details.registration !== 'N/A' && (
+              <View style={styles.vehicleItem}>
+                <Text style={styles.vehicleLabel}>Registration:</Text>
+                <Text style={styles.vehicleValue}>{profileData.vehicle_details.registration}</Text>
+              </View>
+            )}
+            {profileData.vehicle_details.insurance_valid_until && profileData.vehicle_details.insurance_valid_until !== 'TBD' && (
+              <View style={styles.vehicleItem}>
+                <Text style={styles.vehicleLabel}>Insurance:</Text>
+                <View style={styles.vehicleValueContainer}>
+                  <Text style={styles.vehicleValue}>Valid until {profileData.vehicle_details.insurance_valid_until}</Text>
+                  <CheckCircle size={16} color={COLORS.success} />
+                </View>
+              </View>
+            )}
           </View>
         </View>
 

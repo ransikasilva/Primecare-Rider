@@ -494,7 +494,10 @@ const QRCodeScannerScreen: React.FC<QRCodeScannerScreenProps> = React.memo(({
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} translucent />
-      
+
+      {/* Header Background */}
+      <View style={styles.headerBackground} />
+
       {/* Professional Header */}
       <View style={styles.headerContainer}>
         <View style={styles.header}>
@@ -511,15 +514,8 @@ const QRCodeScannerScreen: React.FC<QRCodeScannerScreenProps> = React.memo(({
           </View>
           
           <View style={styles.headerActions}>
-            <TouchableOpacity 
-              onPress={() => setShowPackageInfo(true)} 
-              style={styles.headerActionButton}
-              activeOpacity={0.8}
-            >
-              <Info size={20} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={toggleFlash} 
+            <TouchableOpacity
+              onPress={toggleFlash}
               style={[styles.headerActionButton, flashMode && styles.flashActiveButton]}
               activeOpacity={0.8}
             >
@@ -695,6 +691,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  headerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    backgroundColor: COLORS.white,
+    zIndex: -1,
   },
   scrollContent: {
     flex: 1,

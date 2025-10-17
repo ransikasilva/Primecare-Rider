@@ -4,7 +4,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-
+  Modal,
   StatusBar,
   ScrollView,
   Dimensions,
@@ -73,19 +73,55 @@ const PerformanceDashboardScreen: React.FC<PerformanceDashboardScreenProps> = Re
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
 
+  // Temporary date state for iOS picker
+  const [tempStartDate, setTempStartDate] = useState(new Date(startDate));
+  const [tempEndDate, setTempEndDate] = useState(new Date(endDate));
+
   // Date picker handlers
   const onStartDateChange = (event: any, selectedDate?: Date) => {
-    setShowStartPicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setStartDate(selectedDate.toISOString().split('T')[0]);
+    if (Platform.OS === 'android') {
+      setShowStartPicker(false);
+      if (selectedDate) {
+        setStartDate(selectedDate.toISOString().split('T')[0]);
+        setTempStartDate(selectedDate);
+      }
+    } else if (selectedDate) {
+      setTempStartDate(selectedDate);
     }
   };
 
   const onEndDateChange = (event: any, selectedDate?: Date) => {
-    setShowEndPicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setEndDate(selectedDate.toISOString().split('T')[0]);
+    if (Platform.OS === 'android') {
+      setShowEndPicker(false);
+      if (selectedDate) {
+        setEndDate(selectedDate.toISOString().split('T')[0]);
+        setTempEndDate(selectedDate);
+      }
+    } else if (selectedDate) {
+      setTempEndDate(selectedDate);
     }
+  };
+
+  // iOS Done button handlers
+  const handleStartDateDone = () => {
+    setStartDate(tempStartDate.toISOString().split('T')[0]);
+    setShowStartPicker(false);
+  };
+
+  const handleEndDateDone = () => {
+    setEndDate(tempEndDate.toISOString().split('T')[0]);
+    setShowEndPicker(false);
+  };
+
+  // iOS Cancel button handlers
+  const handleStartDateCancel = () => {
+    setTempStartDate(new Date(startDate));
+    setShowStartPicker(false);
+  };
+
+  const handleEndDateCancel = () => {
+    setTempEndDate(new Date(endDate));
+    setShowEndPicker(false);
   };
 
   // Load performance data for date range
@@ -278,21 +314,21 @@ const PerformanceDashboardScreen: React.FC<PerformanceDashboardScreenProps> = Re
             </View>
           </View>
 
-          {showStartPicker && (
+          {Platform.OS === 'android' && showStartPicker && (
             <DateTimePicker
               value={new Date(startDate)}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              display="default"
               onChange={onStartDateChange}
               maximumDate={new Date()}
             />
           )}
 
-          {showEndPicker && (
+          {Platform.OS === 'android' && showEndPicker && (
             <DateTimePicker
               value={new Date(endDate)}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              display="default"
               onChange={onEndDateChange}
               minimumDate={new Date(startDate)}
               maximumDate={new Date()}
@@ -385,6 +421,70 @@ const PerformanceDashboardScreen: React.FC<PerformanceDashboardScreenProps> = Re
         onReportsPress={() => {}}
         onProfilePress={onProfilePress}
       />
+
+      {/* iOS Date Picker Modals */}
+      {Platform.OS === 'ios' && (
+        <>
+          <Modal
+            visible={showStartPicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={handleStartDateCancel}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <TouchableOpacity onPress={handleStartDateCancel}>
+                    <Text style={styles.modalCancelButton}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.modalTitle}>Select Start Date</Text>
+                  <TouchableOpacity onPress={handleStartDateDone}>
+                    <Text style={styles.modalDoneButton}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={tempStartDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={onStartDateChange}
+                  maximumDate={new Date()}
+                  style={styles.iosDatePicker}
+                />
+              </View>
+            </View>
+          </Modal>
+
+          <Modal
+            visible={showEndPicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={handleEndDateCancel}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <TouchableOpacity onPress={handleEndDateCancel}>
+                    <Text style={styles.modalCancelButton}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.modalTitle}>Select End Date</Text>
+                  <TouchableOpacity onPress={handleEndDateDone}>
+                    <Text style={styles.modalDoneButton}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={tempEndDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={onEndDateChange}
+                  minimumDate={new Date(startDate)}
+                  maximumDate={new Date()}
+                  style={styles.iosDatePicker}
+                />
+              </View>
+            </View>
+          </Modal>
+        </>
+      )}
     </SafeAreaView>
   );
 });
@@ -424,6 +524,13 @@ const styles = StyleSheet.create({
   tableCell: { fontSize: 13, color: COLORS.textSecondary },
   emptyState: { paddingVertical: SPACING.xxxl, alignItems: 'center' },
   emptyStateText: { fontSize: 14, color: COLORS.textSecondary },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+  modalContent: { backgroundColor: COLORS.white, borderTopLeftRadius: LAYOUT.radius.xl, borderTopRightRadius: LAYOUT.radius.xl, paddingBottom: SPACING.xxxl },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md, borderBottomWidth: 1, borderBottomColor: COLORS.gray200 },
+  modalTitle: { fontSize: 16, fontWeight: '600', color: COLORS.textPrimary },
+  modalCancelButton: { fontSize: 16, color: COLORS.textSecondary },
+  modalDoneButton: { fontSize: 16, fontWeight: '600', color: COLORS.primary },
+  iosDatePicker: { height: 200, width: '100%' },
 });
 
 export default PerformanceDashboardScreen;

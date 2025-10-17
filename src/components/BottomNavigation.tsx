@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, Briefcase, BarChart3, User } from 'lucide-react-native';
 import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-system';
 
@@ -32,6 +33,8 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
   onReportsPress,
   onProfilePress,
 }) => {
+  const insets = useSafeAreaInsets();
+
   const navigationItems: NavigationItem[] = [
     {
       key: 'home',
@@ -88,34 +91,38 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.wrapper}>
       <View style={styles.navigationBar}>
         {navigationItems.map(renderNavItem)}
       </View>
+      {/* Safe area bottom padding */}
+      <View style={[styles.safeAreaBottom, { height: insets.bottom }]} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     backgroundColor: COLORS.white,
-    borderTopWidth: LAYOUT.borderWidth.thin,
-    borderTopColor: COLORS.gray200,
     ...SHADOWS.card,
+  },
+  safeAreaBottom: {
+    backgroundColor: COLORS.white,
   },
   navigationBar: {
     flexDirection: 'row',
-    paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.xs,
-    paddingBottom: SPACING.md, // Extra padding for safe area
+    paddingTop: SPACING.xs,
+    paddingBottom: 0,
+    backgroundColor: COLORS.white,
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: SPACING.sm,
+    paddingVertical: 4,
     paddingHorizontal: SPACING.xs,
     borderRadius: LAYOUT.radius.lg,
-    minHeight: 56,
+    minHeight: 52,
     justifyContent: 'center',
     position: 'relative',
   },
@@ -128,7 +135,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: LAYOUT.radius.md,
-    marginBottom: SPACING.xs,
+    marginBottom: 2,
   },
   iconContainerActive: {
     backgroundColor: COLORS.primary + '15',
