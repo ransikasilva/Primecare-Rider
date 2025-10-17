@@ -64,6 +64,12 @@ class LocationService {
 
   async getCurrentLocation(): Promise<Location.LocationObject | null> {
     try {
+      // FIRST: Use cached location if available and recent (since location is already tracking)
+      if (this.lastKnownLocation) {
+        console.log('✅ Using cached location from tracking');
+        return this.lastKnownLocation;
+      }
+
       const hasPermission = await this.requestPermissions();
       if (!hasPermission) {
         console.log('❌ No location permissions');
@@ -72,52 +78,37 @@ class LocationService {
 
       console.log('📍 Getting current location...');
 
-      // Implement timeout with fallback - best practice for expo-location
-      const TIMEOUT = 8000; // 8 seconds timeout
+      // Try getLastKnownPositionAsync FIRST (faster and more reliable)
+      try {
+        const lastKnown = await Location.getLastKnownPositionAsync({
+          maxAge: 60000, // Accept location up to 1 minute old
+          requiredAccuracy: 100, // 100 meters accuracy
+        });
+        if (lastKnown) {
+          console.log('✅ Got last known location:', lastKnown.coords);
+          this.lastKnownLocation = lastKnown;
+          return lastKnown;
+        }
+      } catch (lastKnownError) {
+        console.log('⚠️ getLastKnownPosition failed, trying getCurrentPosition');
+      }
 
-      const location = await Promise.race([
-        // Try to get current position
-        Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        }),
-        // Fallback to last known position after timeout
-        new Promise<Location.LocationObject>((resolve, reject) => {
-          setTimeout(async () => {
-            console.log('⏱️ getCurrentPosition timeout, using last known position');
-            try {
-              const lastKnown = await Location.getLastKnownPositionAsync({
-                maxAge: 60000, // Accept location up to 1 minute old
-                requiredAccuracy: 100, // 100 meters accuracy
-              });
-              if (lastKnown) {
-                resolve(lastKnown);
-              } else {
-                reject(new Error('No last known position available'));
-              }
-            } catch (err) {
-              reject(err);
-            }
-          }, TIMEOUT);
-        }),
-      ]);
+      // Fallback to getCurrentPositionAsync with low accuracy (faster)
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Low, // Changed to Low for faster response
+      });
 
-      console.log('✅ Got location:', location.coords);
+      console.log('✅ Got current location:', location.coords);
       this.lastKnownLocation = location;
       return location;
     } catch (error) {
       console.error('❌ Error getting current location:', error);
 
-      // Final fallback to cached last known location
-      if (this.lastKnownLocation) {
-        console.log('📍 Using cached last known location');
-        return this.lastKnownLocation;
-      }
-
-      // Try one more time with getLastKnownPositionAsync without timeout
+      // Final fallback to any last known position
       try {
         const lastKnown = await Location.getLastKnownPositionAsync();
         if (lastKnown) {
-          console.log('📍 Using last known position from device (final fallback)');
+          console.log('📍 Using last known position (final fallback)');
           this.lastKnownLocation = lastKnown;
           return lastKnown;
         }
