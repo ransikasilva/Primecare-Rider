@@ -65,16 +65,66 @@ class LocationService {
   async getCurrentLocation(): Promise<Location.LocationObject | null> {
     try {
       const hasPermission = await this.requestPermissions();
-      if (!hasPermission) return null;
+      if (!hasPermission) {
+        console.log('❌ No location permissions');
+        return null;
+      }
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      console.log('📍 Getting current location...');
 
+      // Implement timeout with fallback - best practice for expo-location
+      const TIMEOUT = 8000; // 8 seconds timeout
+
+      const location = await Promise.race([
+        // Try to get current position
+        Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        }),
+        // Fallback to last known position after timeout
+        new Promise<Location.LocationObject>((resolve, reject) => {
+          setTimeout(async () => {
+            console.log('⏱️ getCurrentPosition timeout, using last known position');
+            try {
+              const lastKnown = await Location.getLastKnownPositionAsync({
+                maxAge: 60000, // Accept location up to 1 minute old
+                requiredAccuracy: 100, // 100 meters accuracy
+              });
+              if (lastKnown) {
+                resolve(lastKnown);
+              } else {
+                reject(new Error('No last known position available'));
+              }
+            } catch (err) {
+              reject(err);
+            }
+          }, TIMEOUT);
+        }),
+      ]);
+
+      console.log('✅ Got location:', location.coords);
       this.lastKnownLocation = location;
       return location;
     } catch (error) {
-      console.error('Error getting current location:', error);
+      console.error('❌ Error getting current location:', error);
+
+      // Final fallback to cached last known location
+      if (this.lastKnownLocation) {
+        console.log('📍 Using cached last known location');
+        return this.lastKnownLocation;
+      }
+
+      // Try one more time with getLastKnownPositionAsync without timeout
+      try {
+        const lastKnown = await Location.getLastKnownPositionAsync();
+        if (lastKnown) {
+          console.log('📍 Using last known position from device (final fallback)');
+          this.lastKnownLocation = lastKnown;
+          return lastKnown;
+        }
+      } catch (fallbackError) {
+        console.error('❌ Could not get last known position:', fallbackError);
+      }
+
       return null;
     }
   }
