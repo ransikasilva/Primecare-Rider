@@ -20,7 +20,7 @@ import { COLORS, TYPOGRAPHY, SPACING, LAYOUT, SHADOWS } from '../theme/design-sy
 import { ArrowLeft, Camera, Flashlight, Package, CheckCircle, X, RefreshCw, QrCode, Info, Briefcase, Shield, Snowflake, Lock, Hand, FileCheck, AlertTriangle, AlertCircle, Lightbulb, Focus, Keyboard, Headphones, Clock, Gauge, TestTube, Wallet, Thermometer } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { apiService } from '../services/api';
-import { locationService } from '../services/locationService';
+import * as Location from 'expo-location';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -221,12 +221,13 @@ const QRCodeScannerScreen: React.FC<QRCodeScannerScreenProps> = React.memo(({
         setScanningInstructions('Validating package information...');
 
         try {
-          // Get rider's current location
-          const currentLocation = await locationService.getCurrentLocation();
+          // Get rider's current location - use same approach as navigation screen
+          console.log('📍 Getting location for QR scan...');
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
 
-          if (!currentLocation || !currentLocation.coords) {
-            throw new Error('Unable to get your current location. Please ensure location services are enabled.');
-          }
+          console.log('✅ Got location:', location.coords);
 
           // Parse QR code to determine type
           const parsedQR = JSON.parse(qrData);
@@ -236,27 +237,27 @@ const QRCodeScannerScreen: React.FC<QRCodeScannerScreenProps> = React.memo(({
           if (parsedQR.type === 'delivery') {
             scanType = 'delivery_confirm';
             response = await apiService.scanQR(qrData, scanType, {
-              latitude: currentLocation.coords.latitude,
-              longitude: currentLocation.coords.longitude,
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
             });
           } else if (parsedQR.type === 'handover') {
             scanType = 'handover_confirm';
             response = await apiService.scanQR(qrData, scanType, {
-              latitude: currentLocation.coords.latitude,
-              longitude: currentLocation.coords.longitude,
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
             });
           } else if (parsedQR.type === 'multi_parcel_delivery' || parsedQR.type === 'multi_delivery') {
             // Multi-parcel delivery QR - delivers all parcels at once
             console.log('🎁 Scanning multi-parcel delivery QR');
             response = await apiService.scanCombinedQR(qrData, {
-              latitude: currentLocation.coords.latitude,
-              longitude: currentLocation.coords.longitude,
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
             });
           } else {
             // Regular pickup QR
             response = await apiService.scanQR(qrData, scanType, {
-              latitude: currentLocation.coords.latitude,
-              longitude: currentLocation.coords.longitude,
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
             });
           }
 
